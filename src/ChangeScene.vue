@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { handleMotion, useWebAR } from "./WebAR";
+import { useWebAR } from "./WebAR";
 import { TestScene } from "./scene";
-
-// import "@fontsource/klee-one";
+import { requestDeviceMotionPermission, handleMotion } from "./Cencer";
+import "@fontsource/klee-one";
 
 const webar = useWebAR(); //シングルトンを取得
 let isAnimationPlaying = ref(false); //アニメーションが再生されたかどうかの判別
 let isARStarted = ref(true); // 平面が検知されたかどうかの判別
 let Set_Object = ref(true); //オブジェクトが設置されたかどうかの判別
 let messe = ref(false); //ユーザーへのメッセージを表示するかどうかの判別
+let hassya = ref(false);
 let jd: boolean = true;
 let rocket: any | undefined; // ロケットオブジェクトを保持する変数
 let judge: boolean = false;
@@ -42,6 +43,7 @@ let THRESHOLD: number = 20;
 
 const scene_a = () => {
   const testScene = new TestScene();
+  requestDeviceMotionPermission();
   // const colorNum = webar.color_num;
   // rocket = testScene.rocket;
   // if (testScene && testScene.isObjectVisible) {
@@ -54,8 +56,25 @@ const scene_a = () => {
 const playAnimation = () => {
   // if (webar.arScene) {
   //   if (!navigator.xr) return;
+  hassya.value = true;
+  window.addEventListener("devicemotion", (event) => {
+    // console.log(" event");
+    const accelerationStrength = handleMotion(event);
+    //console.log({ accelerationStrength });
+
+    // const displayDiv = document.getElementById("accelerationStrengthDisplay");
+    // if (displayDiv !== null) {
+    //   displayDiv.textContent = "Acceleration Strength: " + accelerationStrength;
+    // }
+    if (!judge && accelerationStrength > THRESHOLD) {
+      judge = true;
+      hassya.value = false;
+      webar.startAnimationOnClick();
+    }
+  });
+
   isAnimationPlaying.value = true;
-  webar.startAnimationOnClick();
+
   //   try {
   //     const DV_motion = navigator.xr.requestSession("immersive-ar");
   //     DV_motion.requestAnimationFrame((time: number) =>
@@ -118,7 +137,7 @@ webar.delegate = {
       height: '75px',
     }"
   >
-    ロケット発射
+    ロケット設置完了
   </button>
 
   <!-- <button
@@ -145,6 +164,26 @@ webar.delegate = {
     "
   >
     端末を動かして平面を検出してください
+  </div>
+  <div
+    v-if="hassya"
+    class="hassya-message"
+    style="
+      width: 50%;
+      position: absolute;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 18px;
+      color: white;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+      white-space: pre-line;
+    "
+  >
+    端末を振り上げて<br />ロケットを発射 !
   </div>
 </template>
 <style scoped>
@@ -179,17 +218,7 @@ webar.delegate = {
   font-family: "Klee One", sans-serif;
   z-index: 20;
 }
-.col {
+.hassya-message {
   font-family: "Klee One", sans-serif;
-  font-size: 18px;
-  position: absolute;
-  bottom: 70px;
-  right: 1px;
-  height: 30px;
-  display: flex;
-  background-color: rgb(65, 109, 240);
-  color: black;
-  justify-content: center;
-  border-radius: 15px;
 }
 </style>
