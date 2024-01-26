@@ -1,54 +1,89 @@
-<script setup lang="ts">
-import { ref } from "vue";
+<!-- <script setup lang="ts"> -->
+<script lang="ts">
+import { onMounted, ref, defineComponent } from "vue";
 import { useWebAR } from "./WebAR";
 import { TestScene } from "./scene";
 import { requestDeviceMotionPermission, handleMotion } from "./Cencer";
 import "@fontsource/klee-one";
+import { DescriptionHtml } from "./descriptionHtml";
 
-const webar = useWebAR(); //シングルトンを取得
-let isAnimationPlaying = ref(false); //アニメーションが再生されたかどうかの判別
-let isARStarted = ref(true); // 平面が検知されたかどうかの判別
-let Set_Object = ref(true); //オブジェクトが設置されたかどうかの判別
-let messe = ref(false); //ユーザーへのメッセージを表示するかどうかの判別
-let hassya = ref(false);
-let jd: boolean = true;
-let rocket: any | undefined; // ロケットオブジェクトを保持する変数
-let judge: boolean = false;
-let THRESHOLD: number = 20;
+// let html2canvasElement: THREE.Mesh;
 
-const scene_a = () => {
-  const testScene = new TestScene();
-  requestDeviceMotionPermission();
-  webar.placeScene(testScene);
-  Set_Object.value = false;
-};
-const playAnimation = () => {
-  hassya.value = true;
-  window.addEventListener("devicemotion", (event) => {
-    const accelerationStrength = handleMotion(event);
-    if (!judge && accelerationStrength > THRESHOLD) {
-      judge = true;
-      hassya.value = false;
-      webar.startAnimationOnClick();
-    }
-  });
+// onMounted(async () => {
+//   const descriptionHtml = new DescriptionHtml();
+//   html2canvasElement = await descriptionHtml.generateDescriptionHtml(
+//     "tmp",
+//     "desc"
+//   );
+// });
 
-  isAnimationPlaying.value = true;
-};
+export default defineComponent({
+  setup() {
+    const webar = useWebAR(); //シングルトンを取得
+    let isAnimationPlaying = ref(false); //アニメーションが再生されたかどうかの判別
+    let isARStarted = ref(true); // 平面が検知されたかどうかの判別
+    let Set_Object = ref(true); //オブジェクトが設置されたかどうかの判別
+    let messe = ref(false); //ユーザーへのメッセージを表示するかどうかの判別
+    let hassya = ref(false);
+    let jd: boolean = true;
+    let rocket: any | undefined; // ロケットオブジェクトを保持する変数
+    let judge: boolean = false;
+    let THRESHOLD: number = 20;
+    let html2canvasElement: THREE.Mesh;
+    let descriptionHtmlMap: Map<string, THREE.Mesh>;
 
-// ARが起動されたら状態を更新
-webar.delegate = {
-  onARButton: () => {
-    setTimeout(() => {
-      messe.value = true;
-    }, 2500);
+    onMounted(async () => {
+      const descriptionHtml = new DescriptionHtml();
+      descriptionHtmlMap = await descriptionHtml.generate();
+    });
+
+    const scene_a = () => {
+      const testScene = new TestScene();
+      // testScene.addDescriptionHtml(html2canvasElement);
+      testScene.addDescriptionHtmlMap(descriptionHtmlMap);
+      requestDeviceMotionPermission();
+      webar.placeScene(testScene);
+      Set_Object.value = false;
+    };
+    const playAnimation = () => {
+      hassya.value = true;
+      window.addEventListener("devicemotion", (event) => {
+        const accelerationStrength = handleMotion(event);
+        if (!judge && accelerationStrength > THRESHOLD) {
+          judge = true;
+          hassya.value = false;
+          webar.startAnimationOnClick();
+        }
+      });
+
+      isAnimationPlaying.value = true;
+    };
+
+    // ARが起動されたら状態を更新
+    webar.delegate = {
+      onARButton: () => {
+        setTimeout(() => {
+          messe.value = true;
+        }, 2500);
+      },
+      onPlaneFound: (pose: THREE.Matrix4) => {
+        // 平面が検知されたときの処理
+        isARStarted.value = false;
+        messe.value = false;
+      },
+    };
+
+    return {
+      scene_a,
+      playAnimation,
+      isARStarted,
+      isAnimationPlaying,
+      Set_Object,
+      messe,
+      hassya,
+    };
   },
-  onPlaneFound: (pose: THREE.Matrix4) => {
-    // 平面が検知されたときの処理
-    isARStarted.value = false;
-    messe.value = false;
-  },
-};
+});
 </script>
 <template>
   <button
