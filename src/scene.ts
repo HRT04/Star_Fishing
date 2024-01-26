@@ -14,6 +14,7 @@ import {
   launchsmoke,
 } from "./Particle";
 import { dspResult } from "./color";
+import html2canvas from "html2canvas";
 
 const log = useLogger();
 let num: number,
@@ -67,6 +68,7 @@ export class TestScene implements ARScene {
   seiza?: THREE.Object3D;
   rocketBase?: THREE.Object3D;
   scene?: any;
+  descriptionHtml?: THREE.Mesh;
 
   name() {
     return "test";
@@ -94,6 +96,9 @@ export class TestScene implements ARScene {
     this.rocket.mesh.position.set(0, 0.2, 0);
     this.scene.add(this.rocket.mesh);
 
+    // 概要html
+    this.descriptionHtml = await this.addDescriptionHtml("てんぷ", "説明文");
+
     const grnd: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
     const grnd_seiza: THREE.Vector3 = new THREE.Vector3(0, Tenzyo, 0);
     // 発射台読み込み
@@ -107,6 +112,7 @@ export class TestScene implements ARScene {
 
     // seiza読み込み
     if (glbpath) {
+      alert(glbpath);
       loadModel_seiza(new GLTFLoader(), grnd_seiza, glbpath, 0.005).then(
         (loadedModel) => {
           this.seiza = loadedModel;
@@ -134,6 +140,56 @@ export class TestScene implements ARScene {
     if (type === "update" && typeof listener === "function") {
       this.updateListeners.push(listener as (event: any) => void);
     }
+  }
+
+  async addDescriptionHtml(
+    constellationName: string,
+    description: string
+  ): Promise<THREE.Mesh> {
+    // 大枠
+    const container = document.createElement("div");
+    container.className = "element-container";
+
+    // 星座名
+    const title = document.createElement("h4");
+    title.className = "element-title";
+    title.textContent = constellationName;
+
+    // 星座の説明
+    const desc = document.createElement("p");
+    desc.className = "element-description";
+    desc.textContent = description;
+
+    container.appendChild(title);
+    container.appendChild(desc);
+
+    const html2canvasElement = document.getElementById("html2canvas");
+    if (html2canvasElement === null) throw new Error();
+
+    html2canvasElement.style.width = "230px";
+    html2canvasElement.style.opacity = "0.8";
+    html2canvasElement.appendChild(container);
+
+    const canvas = await html2canvas(html2canvasElement, {
+      useCORS: true,
+      scale: 2,
+      backgroundColor: null,
+    });
+
+    const texture = new THREE.Texture(canvas);
+    texture.needsUpdate = true;
+
+    const geometry = new THREE.PlaneGeometry(1, 1);
+    const material = new THREE.MeshBasicMaterial({
+      map: texture,
+      side: THREE.DoubleSide,
+      transparent: true,
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(1, 0, -2);
+    mesh.rotateY(-Math.PI / 6);
+    // mesh.visible = false;
+    return mesh;
   }
 
   animate(): boolean | void {
@@ -198,7 +254,11 @@ export class TestScene implements ARScene {
       this.seiza.rotation.z += 0.01;
     }
   }
+  descriptionHtmlAnimate(): void {
+    //
+  }
 }
+
 const getParticle = (rocket: any, scene: THREE.Scene) => {
   let p: any;
   if (particleArray.length > 0) {
