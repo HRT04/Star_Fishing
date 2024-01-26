@@ -91,7 +91,7 @@ export class TestScene implements ARScene {
     this.scene.add(this.rocket.mesh);
 
     // 概要html
-    this.descriptionHtml = await this.addDescriptionHtml("てんぷ", "説明文");
+    // this.descriptionHtml = this.addDescriptionHtml("てんぷ", "説明文");
 
     const grnd: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
     const grnd_seiza: THREE.Vector3 = new THREE.Vector3(0, Tenzyo, 0);
