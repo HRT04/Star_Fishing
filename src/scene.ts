@@ -74,12 +74,6 @@ export class TestScene implements ARScene {
     return "test";
   }
   makeObjectTree(): THREE.Object3D {
-    // log.info("make object tree", this.name())
-    // const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1).translate(0, 0.05, 0);
-
-    // const material = new THREE.MeshPhongMaterial({
-    //   color: 0xffffff * Math.random(),
-    // });
     // ロケットの色取得
     const webARInstance = useWebAR();
     const color_string = webARInstance.get_color_num.cn;
