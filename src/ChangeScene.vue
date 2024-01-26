@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { useWebAR } from "./WebAR";
 import { TestScene } from "./scene";
 import { requestDeviceMotionPermission, handleMotion } from "./Cencer";
-// import "@fontsource/klee-one";
+import "@fontsource/klee-one";
 
 const webar = useWebAR(); //シングルトンを取得
 let isAnimationPlaying = ref(false); //アニメーションが再生されたかどうかの判別

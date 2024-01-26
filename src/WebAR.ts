@@ -7,7 +7,7 @@ import { Color_process, Color_divide, dspResult, season } from "./color";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
 import { burnerLight } from "./Lights";
 import { context } from "three/examples/jsm/nodes/Nodes.js";
-// import "@fontsource/klee-one";
+import "@fontsource/klee-one";
 
 const log = useLogger();
 
