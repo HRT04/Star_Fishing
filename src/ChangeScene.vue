@@ -16,10 +16,10 @@ let rocket: any | undefined; // ロケットオブジェクトを保持する変
 let judge: boolean = false;
 let THRESHOLD: number = 20;
 
-const scene_a = async () => {
+const scene_a = () => {
   const testScene = new TestScene();
   requestDeviceMotionPermission();
-  await webar.placeScene(testScene);
+  webar.placeScene(testScene);
   Set_Object.value = false;
 };
 const playAnimation = () => {
