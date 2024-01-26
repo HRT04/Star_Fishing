@@ -1,6 +1,6 @@
 // import { scene } from "./scene";
 import THREE from "./scene";
-import { Colors } from "./Rocket";
+import { Colors } from "./Loader_Data";
 
 export let hemisphereLight: THREE.HemisphereLight,
   ambientLight: THREE.AmbientLight,

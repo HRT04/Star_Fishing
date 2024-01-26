@@ -2,9 +2,10 @@ import * as THREE from "three";
 export default THREE;
 import useLogger from "./logger";
 import { Rocket } from "./Rocket";
-import { loadModel_terminal } from "./Loader";
+import { loadModel_seiza, loadModel_terminal } from "./Loader_Data";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
 import { createLights } from "./Lights";
+import { useWebAR } from "./WebAR";
 import {
   flyParticle,
   particleArray,
@@ -12,9 +13,16 @@ import {
   Particle,
   launchsmoke,
 } from "./Particle";
+import { dspResult } from "./color";
 
 const log = useLogger();
-let num: number;
+let num: number,
+  Time: number = 0,
+  Gra: number = 0.00098,
+  bound: number,
+  bound_top: number = 0.5,
+  f: number = 0; // 星座アニメーションフラグ
+const Tenzyo: number = 180; // 天井位置
 function Num(n: number, p: any) {
   if (p < 0.25) {
     n = 0.0006;
@@ -23,10 +31,20 @@ function Num(n: number, p: any) {
   } else if (p < 0.33) {
     n = 0.002;
   } else if (p < 0.5) {
-    n = 0.01;
+    n = 0.013;
+  } else if (p < 5) {
+    n = 0.03;
+  } else if (p < 9) {
+    n = 0.2;
+  } else if (p < 13) {
+    n = 0.6;
+  } else if (p < 18) {
+    n = 1.0;
   } else if (p < 20) {
-    n = 0.02;
-  } else if (20 <= p) {
+    n = 1.5;
+  } else if (p < Tenzyo) {
+    n = 60.0;
+  } else {
     n = 0;
   }
   return n;
@@ -35,6 +53,7 @@ export interface ARScene {
   makeObjectTree(): THREE.Object3D;
 
   animate(): void;
+  seizanimate(): void;
 
   name(): string;
   addEventListener(
@@ -45,8 +64,9 @@ export interface ARScene {
 
 export class TestScene implements ARScene {
   rocket?: Rocket;
+  seiza?: THREE.Object3D;
   rocketBase?: THREE.Object3D;
-  scene?: THREE.Scene;
+  scene?: any;
 
   name() {
     return "test";
@@ -58,19 +78,49 @@ export class TestScene implements ARScene {
     // const material = new THREE.MeshPhongMaterial({
     //   color: 0xffffff * Math.random(),
     // });
+    // ロケットの色取得
+    const webARInstance = useWebAR();
+    const color_string = webARInstance.get_color_num.cn;
+    const glbpath = webARInstance.get_color_num.pth;
+
+    // scene作成
     const scene: THREE.Scene = new THREE.Scene();
     this.scene = scene;
 
     // ロケット
-    const rocket = new Rocket();
+    const rocket = new Rocket(color_string);
     this.rocket = rocket;
     this.rocket.mesh.scale.set(0.0005, 0.0005, 0.0005);
     this.rocket.mesh.position.set(0, 0.2, 0);
     this.scene.add(this.rocket.mesh);
 
-    // 発射台
     const grnd: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
-    loadModel_terminal(scene, new GLTFLoader(), grnd, "./terminal.glb", 0.035);
+    const grnd_seiza: THREE.Vector3 = new THREE.Vector3(0, Tenzyo, 0);
+    // 発射台読み込み
+    loadModel_terminal(
+      scene,
+      new GLTFLoader(),
+      grnd,
+      "./glb/terminal.glb",
+      0.035
+    );
+
+    // seiza読み込み
+    if (glbpath) {
+      loadModel_seiza(new GLTFLoader(), grnd_seiza, glbpath, 0.005).then(
+        (loadedModel) => {
+          this.seiza = loadedModel;
+          this.seiza.visible = false;
+          this.seiza.position.y = Tenzyo;
+          // this.seiza.position.z = -1.0;
+          this.seiza.rotation.x = Math.PI / 2;
+          this.seiza.castShadow = false;
+          this.seiza.receiveShadow = false;
+          // this.seiza.rotation.z = Math.PI;
+          this.scene.add(this.seiza);
+        }
+      );
+    }
     createLights(this.scene);
 
     return this.scene;
@@ -86,19 +136,15 @@ export class TestScene implements ARScene {
     }
   }
 
-  animate(): void {
+  animate(): boolean | void {
     if (!this.rocket) return;
     if (!this.scene) return;
 
     num = Num(num, this.rocket.mesh.position.y);
 
-    // 立方体を回転させるアニメーション
-    // this.rocket.mesh.rotation.y += 0.1 * sec;
     this.rocket.mesh.position.y += num;
-    // this.rocket.mesh.position.x = Math.random() * Math.PI * 0.5;
     this.rocket.mesh.rotation.x = Math.random() * Math.sin(1) * 0.03;
     this.rocket.mesh.rotation.z = Math.random() * Math.sin(1) * 0.03;
-    // this.rocket.mesh.position.z = Math.random() * Math.PI * 0.005;
 
     let p = getParticle(this.rocket, this.scene);
     setTimeout(() => {
@@ -107,6 +153,50 @@ export class TestScene implements ARScene {
       createFlyingParticles(p, this.rocket, this.scene);
     }, 2000);
     create_launchSmoke(p, this.rocket, this.scene);
+    if (Tenzyo <= this.rocket.mesh.position.y) {
+      if (!this.seiza) return;
+      this.rocket.mesh.visible = false;
+      this.seiza.visible = true;
+      return false;
+    }
+    return true;
+  }
+  seizanimate(): void {
+    if (!this.seiza) return;
+    if (this.seiza.position.y < 0.2) {
+      bound = 0.022;
+      this.seiza.position.y = 0.2;
+      if (bound_top <= 0.2001) {
+        f = 3;
+      } else {
+        f = 1;
+      }
+    }
+    if (f == 0) {
+      if (22 < this.seiza.position.y) {
+        // this.seiza.rotation.y += 0.01;
+        Time += 2.0;
+      } else {
+        Time = 18;
+      }
+      this.seiza.position.y -= (1 / 2) * Gra * Math.pow(Time, 2);
+    } else if (f == 1) {
+      this.seiza.position.y += bound;
+      if (bound_top / 2 < this.seiza.position.y) {
+        bound = bound * 0.98;
+      }
+      if (bound_top < this.seiza.position.y) {
+        f = 2;
+        bound_top = (bound_top * 3) / 4;
+      }
+    } else if (f == 2) {
+      this.seiza.position.y -= bound;
+      if (bound_top / 2 < this.seiza.position.y) {
+        bound = bound * 1.02;
+      }
+    } else {
+      this.seiza.rotation.z += 0.01;
+    }
   }
 }
 const getParticle = (rocket: any, scene: THREE.Scene) => {

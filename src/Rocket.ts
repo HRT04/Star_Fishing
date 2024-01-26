@@ -1,26 +1,8 @@
 import { CSG } from "three-csg-ts";
 import THREE from "./scene";
 import { RocketcreateLights } from "./Lights";
-import { useWebAR, WebAR } from "./WebAR";
-interface colors {
-  white: number;
-  darkGrey: number;
-  windowBlue: number;
-  windowDarkBlue: number;
-  thrusterOrange: number;
-  deepblue: number;
-  rocket: number;
-}
+import { Colors } from "./Loader_Data";
 
-export const Colors: colors = {
-  white: 0xffffff,
-  darkGrey: 0x4d4b54,
-  windowBlue: 0xaabbe3,
-  windowDarkBlue: 0x4a6e8a,
-  thrusterOrange: 0xfea036,
-  deepblue: 0x003366,
-  rocket: 0xc8c8c8,
-};
 export class Rocket {
   mesh: THREE.Object3D;
   roof: THREE.Object3D;
@@ -28,8 +10,7 @@ export class Rocket {
   window: THREE.Object3D;
   base: THREE.Object3D;
 
-  constructor() {
-    const webARInstance = useWebAR();
+  constructor(col: any) {
     this.mesh = new THREE.Object3D();
 
     // 形の編集
@@ -133,20 +114,20 @@ export class Rocket {
     // materials
 
     let matRoof1: THREE.MeshPhongMaterial = new THREE.MeshPhongMaterial({
-      color: parseInt(webARInstance.get_color_num ?? "0", 16),
+      color: parseInt(col ?? "0", 16),
       flatShading: true,
     });
     let matRoof2: THREE.MeshPhongMaterial = new THREE.MeshPhongMaterial({
-      color: parseInt(webARInstance.get_color_num ?? "0", 16),
+      color: parseInt(col ?? "0", 16),
       flatShading: true,
     });
     let matRoof3: THREE.MeshPhongMaterial = new THREE.MeshPhongMaterial({
-      color: parseInt(webARInstance.get_color_num ?? "0", 16),
+      color: parseInt(col ?? "0", 16),
       flatShading: true,
     });
 
     let matBody: THREE.MeshPhongMaterial = new THREE.MeshPhongMaterial({
-      color: parseInt(webARInstance.get_color_num ?? "0", 16),
+      color: parseInt(col ?? "0", 16),
       flatShading: true,
     });
     let matWindowFrame: THREE.MeshPhongMaterial = new THREE.MeshPhongMaterial({

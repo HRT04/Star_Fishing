@@ -3,10 +3,11 @@ import { ARButton } from "three/examples/jsm/webxr/ARButton.js";
 import type { ARScene } from "./scene";
 import useLogger from "./logger";
 import { line, videosetup, capture } from "./Line_camera";
-import { Color_process, Color_divide, dspResult } from "./color";
+import { Color_process, Color_divide, dspResult, season } from "./color";
+import { GLTFLoader } from "three/examples/jsm/Addons.js";
 import { burnerLight } from "./Lights";
 import { context } from "three/examples/jsm/nodes/Nodes.js";
-import "@fontsource/klee-one";
+// import "@fontsource/klee-one";
 
 const log = useLogger();
 
@@ -34,11 +35,28 @@ export class WebAR {
 
   arScene?: ARScene;
   color_num?: string;
-  private animationStarted: boolean = false;
+  col_path?: string;
+
+  // 衝突で使用
+  tenbin?: THREE.Object3D;
+  passedTime?: number;
+  isLaunch?: boolean;
+  tween: any;
+
+  // 星空
+  dome?: THREE.Object3D;
+
+  //当たり判定で使用
+  rocketBoundingBox?: THREE.Box3;
+  tenbinBoundingBox?: THREE.Box3;
+
+  // アニメーション再生の有無
+  private animationStarted: boolean | void = false;
+  private seizanimationStarted: boolean = false;
 
   // color_numのゲッターメソッド
-  get get_color_num(): string | undefined {
-    return this.color_num;
+  get get_color_num(): { cn: string | undefined; pth: string | undefined } {
+    return { cn: this.color_num, pth: this.col_path };
   }
   //シングルトンを作る（インスタンスがアプリケーション内で唯一であることを保証する）
   private static instance: WebAR | null = null;
@@ -48,10 +66,54 @@ export class WebAR {
     }
     return WebAR.instance;
   }
+  // 星空
+  makeDome() {
+    // domeの画像関連のやつ
+    const textureLoader = new THREE.TextureLoader();
+    const texture = textureLoader.load("./starrySky.png");
+
+    // 必要なパラメータ
+    const domeRadius = 500; // ドームの半径
+    const domeSegments = 32; // ドームの分割数
+
+    // 材質
+    const material_ = new THREE.MeshPhongMaterial({
+      color: 0x87ceeb,
+      map: texture,
+      side: THREE.DoubleSide,
+      transparent: true, // 透明度を有効にする
+      opacity: 0.5,
+    });
+
+    // ドームのジオメトリ
+    const domeGeometry = new THREE.SphereGeometry(
+      domeRadius,
+      domeSegments,
+      domeSegments,
+      0,
+      Math.PI * 2,
+      0,
+      Math.PI / 2
+    );
+    // ドームのメッシュ
+    this.dome = new THREE.Mesh(domeGeometry, material_);
+
+    // ドームの位置を変更
+    this.dome.position.y = 60;
+
+    this.scene.add(this.dome);
+  }
+
+  ///////
+
+  // アニメーション実行判別
   startAnimationOnClick() {
     this.animationStarted = true;
   }
 
+  // start_seizanimation() {
+  //   this.seizanimationStarted = true;
+  // }
   constructor() {}
 
   placeScene(ar_scene: ARScene) {
@@ -172,18 +234,22 @@ export class WebAR {
       domOverlay: { root: overray_element! },
     });
     arbutton.addEventListener("click", () => {
-      let img: any, hsv_value: any;
+      let img: any, hsv_value: any, result: any;
       scene.background = null;
       this.delegate?.onARButton?.(); // XR起動
       img = capture(videoCanvas); // 画像キャプチャ
       hsv_value = Color_process(img); // 画像処理
       // hsv_value = Color_GBR(img);
       // カーラコード取得
-      this.color_num = Color_divide(
+      result = Color_divide(
         hsv_value.modeHue,
         hsv_value.modeSatu,
         hsv_value.modeValue
       );
+      this.color_num = result.color;
+      this.col_path = season(result.name);
+
+      this.makeDome();
       // カラーコード表示 (確認用)
       // dspResult(this.color_num);
     });
@@ -331,8 +397,16 @@ export class WebAR {
         duration = timestamp - this.prevTime;
       }
       this.prevTime = timestamp;
+
+      // アニメーション再生フラグ
       if (this.animationStarted) {
-        this.arScene?.animate();
+        this.animationStarted = this.arScene?.animate();
+        if (this.animationStarted !== undefined && !this.animationStarted) {
+          this.seizanimationStarted = true;
+        }
+      }
+      if (this.seizanimationStarted) {
+        this.arScene?.seizanimate();
       }
       this.delegate?.onRender?.(renderer);
       renderer.render(scene, camera);
