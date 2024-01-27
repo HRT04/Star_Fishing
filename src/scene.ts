@@ -101,9 +101,11 @@ export class TestScene implements ARScene {
     this.scene.add(this.rocket.mesh);
 
     // 概要html
-    // this.scene.add(this.descriptionHtml);
-    if (glbpath) this.scene.add(this.descriptionHtmlMap?.get(glbpath));
-    else alert("glbpath is undefined" + " " + glbpath);
+    alert("add descriptionHtml");
+
+    this.scene.add(this.descriptionHtml);
+    // if (glbpath) this.scene.add(this.descriptionHtmlMap?.get(glbpath));
+    // else alert("glbpath is undefined" + " " + glbpath);
     // this.descriptionHtml = this.addDescriptionHtml("てんぷ", "説明文");
 
     const grnd: THREE.Vector3 = new THREE.Vector3(0, 0, 0);

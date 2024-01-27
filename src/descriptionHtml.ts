@@ -141,8 +141,11 @@ export class DescriptionHtml {
 
   async generate(): Promise<Map<string, THREE.Mesh>> {
     for (const key in jsonData) {
+      //   alert(`key = ${key}`);
       const name = jsonData[key].name;
+      //   alert(`name = ${name}`);
       const description = jsonData[key].description;
+      //   alert(`description = ${description}`);
 
       this.descriptionHtmlMap.set(
         key,
@@ -150,6 +153,7 @@ export class DescriptionHtml {
       );
     }
 
+    // alert(this.descriptionHtmlMap.size);
     return this.descriptionHtmlMap;
   }
 
@@ -174,6 +178,7 @@ export class DescriptionHtml {
     container.appendChild(title);
     container.appendChild(desc);
 
+    // ここに全ての要素をappneChildしてるのよくないかも
     const html2canvasElement = document.getElementById("html2canvas");
     if (html2canvasElement === null) throw new Error();
 

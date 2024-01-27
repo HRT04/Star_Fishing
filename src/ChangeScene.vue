@@ -40,7 +40,12 @@ export default defineComponent({
     const scene_a = () => {
       const testScene = new TestScene();
       // testScene.addDescriptionHtml(html2canvasElement);
-      testScene.addDescriptionHtmlMap(descriptionHtmlMap);
+      // testScene.addDescriptionHtmlMap(descriptionHtmlMap);
+      const seizadesu = descriptionHtmlMap.get("aRyuu-za.glb");
+      if (seizadesu === undefined) {
+        throw new Error();
+      }
+      testScene.addDescriptionHtml(seizadesu);
       requestDeviceMotionPermission();
       webar.placeScene(testScene);
       Set_Object.value = false;
