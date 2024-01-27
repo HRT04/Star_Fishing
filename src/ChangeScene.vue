@@ -25,9 +25,15 @@ export default defineComponent({
     onMounted(async () => {
       const descriptionHtml = new DescriptionHtml();
       descriptionHtmlMap = await descriptionHtml.generate();
+      const html2canvasElement = document.getElementById("html2canvas");
+      if (html2canvasElement) html2canvasElement.style.visibility = "hidden";
+      else alert("html2canvas is undefined");
     });
 
     const scene_a = () => {
+      const html2canvasElement = document.getElementById("html2canvas");
+      if (html2canvasElement) html2canvasElement.style.visibility = "visible";
+      else alert("html2canvas is undefined");
       const testScene = new TestScene();
       testScene.addDescriptionHtmlMap(descriptionHtmlMap);
       requestDeviceMotionPermission();
