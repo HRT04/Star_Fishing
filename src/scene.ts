@@ -234,6 +234,7 @@ export class TestScene implements ARScene {
   descriptionHtmlAnimate(): void {
     if (!this.seiza) return;
     if (!this.descriptionHtml) return;
+
     this.descriptionHtml.visible = true;
     // if (this.seiza?.position.y <= 0.2) {
     // this.descriptionHtml.visible = true;
