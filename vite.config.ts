@@ -20,7 +20,8 @@ export default defineConfig({
     //   passphrase: "0000",
     // },
   },
-  base: "/~e215707/webxr/",
+  base: "/~e215711/webxr/",
+  // base: "/~e215707/webxr/",
   build: {
     assetsDir: "assets",
     // sourcemap: true

@@ -14,6 +14,7 @@ import {
   launchsmoke,
 } from "./Particle";
 import { dspResult } from "./color";
+import html2canvas from "html2canvas";
 
 const log = useLogger();
 let num: number,
@@ -54,6 +55,7 @@ export interface ARScene {
 
   animate(): void;
   seizanimate(): void;
+  descriptionHtmlAnimate(): void;
 
   name(): string;
   addEventListener(
@@ -67,21 +69,29 @@ export class TestScene implements ARScene {
   seiza?: THREE.Object3D;
   rocketBase?: THREE.Object3D;
   scene?: any;
+  descriptionHtml?: THREE.Mesh;
+  descriptionHtmlMap?: Map<string, THREE.Mesh>;
+  glbpath?: string;
+
+  addDescriptionHtml(mesh: THREE.Mesh): void {
+    this.descriptionHtml = mesh;
+    // this.scene.add(this.descriptionHtml);
+  }
+
+  addDescriptionHtmlMap(map: Map<string, THREE.Mesh>): void {
+    this.descriptionHtmlMap = map;
+  }
 
   name() {
     return "test";
   }
   makeObjectTree(): THREE.Object3D {
-    // log.info("make object tree", this.name())
-    // const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1).translate(0, 0.05, 0);
-
-    // const material = new THREE.MeshPhongMaterial({
-    //   color: 0xffffff * Math.random(),
-    // });
     // ロケットの色取得
     const webARInstance = useWebAR();
     const color_string = webARInstance.get_color_num.cn;
     const glbpath = webARInstance.get_color_num.pth;
+    if (glbpath) this.glbpath = glbpath.replace("./glb/", "");
+    else alert("glbpath is undefined");
 
     // scene作成
     const scene: THREE.Scene = new THREE.Scene();
@@ -93,6 +103,28 @@ export class TestScene implements ARScene {
     this.rocket.mesh.scale.set(0.0005, 0.0005, 0.0005);
     this.rocket.mesh.position.set(0, 0.2, 0);
     this.scene.add(this.rocket.mesh);
+
+    // 概要html
+    if (this.descriptionHtmlMap && this.glbpath) {
+      const target = this.glbpath;
+      this.descriptionHtml = this.descriptionHtmlMap.get(target);
+      if (this.descriptionHtml) this.descriptionHtml.visible = false;
+    } else {
+      alert("cant add!!!");
+    }
+    if (this.descriptionHtml === undefined) {
+      alert("descriptionHtml is undefined");
+    }
+    const elem = document.getElementById("html2canvas");
+    const children = elem?.children;
+    if (children)
+      for (let child of children) {
+        if (child.id !== glbpath) {
+          elem?.removeChild(child);
+        }
+      }
+    else alert("child is undefined");
+    this.scene.add(this.descriptionHtml);
 
     const grnd: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
     const grnd_seiza: THREE.Vector3 = new THREE.Vector3(0, Tenzyo, 0);
@@ -107,6 +139,7 @@ export class TestScene implements ARScene {
 
     // seiza読み込み
     if (glbpath) {
+      // alert(glbpath);
       loadModel_seiza(new GLTFLoader(), grnd_seiza, glbpath, 0.005).then(
         (loadedModel) => {
           this.seiza = loadedModel;
@@ -198,7 +231,19 @@ export class TestScene implements ARScene {
       this.seiza.rotation.z += 0.01;
     }
   }
+  descriptionHtmlAnimate(): void {
+    if (!this.seiza) return;
+    if (!this.descriptionHtml) return;
+    this.descriptionHtml.visible = true;
+    // if (this.seiza?.position.y <= 0.2) {
+    // this.descriptionHtml.visible = true;
+    // }
+
+    this.descriptionHtml.position.y = this.seiza.position.y;
+    this.descriptionHtml.position.x = this.seiza.position.x + 0.2;
+  }
 }
+
 const getParticle = (rocket: any, scene: THREE.Scene) => {
   let p: any;
   if (particleArray.length > 0) {

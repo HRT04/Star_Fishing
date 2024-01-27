@@ -1,120 +1,80 @@
-<script setup lang="ts">
-import { ref } from "vue";
+<!-- <script setup lang="ts"> -->
+<script lang="ts">
+import { onMounted, ref, defineComponent } from "vue";
 import { useWebAR } from "./WebAR";
 import { TestScene } from "./scene";
 import { requestDeviceMotionPermission, handleMotion } from "./Cencer";
 import "@fontsource/klee-one";
+import { DescriptionHtml } from "./descriptionHtml";
 
-const webar = useWebAR(); //シングルトンを取得
-let isAnimationPlaying = ref(false); //アニメーションが再生されたかどうかの判別
-let isARStarted = ref(true); // 平面が検知されたかどうかの判別
-let Set_Object = ref(true); //オブジェクトが設置されたかどうかの判別
-let messe = ref(false); //ユーザーへのメッセージを表示するかどうかの判別
-let hassya = ref(false);
-let jd: boolean = true;
-let rocket: any | undefined; // ロケットオブジェクトを保持する変数
-let judge: boolean = false;
-let THRESHOLD: number = 20;
+export default defineComponent({
+  setup() {
+    const webar = useWebAR(); //シングルトンを取得
+    let isAnimationPlaying = ref(false); //アニメーションが再生されたかどうかの判別
+    let isARStarted = ref(true); // 平面が検知されたかどうかの判別
+    let Set_Object = ref(true); //オブジェクトが設置されたかどうかの判別
+    let messe = ref(false); //ユーザーへのメッセージを表示するかどうかの判別
+    let hassya = ref(false);
+    let jd: boolean = true;
+    let rocket: any | undefined; // ロケットオブジェクトを保持する変数
+    let judge: boolean = false;
+    let THRESHOLD: number = 20;
+    let html2canvasElement: THREE.Mesh;
+    let descriptionHtmlMap: Map<string, THREE.Mesh>;
 
-// function handleFrame(time: number, frame: any) {
-//   const device = frame.device;
+    onMounted(async () => {
+      const descriptionHtml = new DescriptionHtml();
+      descriptionHtmlMap = await descriptionHtml.generate();
+    });
 
-//   // frameからデバイスモーション情報を取得
-//   const deviceMotion = frame.getDeviceMotion();
+    const scene_a = () => {
+      const testScene = new TestScene();
+      testScene.addDescriptionHtmlMap(descriptionHtmlMap);
+      requestDeviceMotionPermission();
+      webar.placeScene(testScene);
+      Set_Object.value = false;
+    };
+    const playAnimation = () => {
+      hassya.value = true;
+      window.addEventListener("devicemotion", (event) => {
+        const accelerationStrength = handleMotion(event);
+        if (!judge && accelerationStrength > THRESHOLD) {
+          judge = true;
+          hassya.value = false;
+          webar.startAnimationOnClick();
+        }
+      });
 
-//   // deviceMotionを使用して振り上げの判定やその他の処理を行う
-//   if (deviceMotion) {
-//     const acceleration = deviceMotion.acceleration;
-//     const accelerationStrength = Math.sqrt(
-//       acceleration.x * acceleration.x +
-//         acceleration.y * acceleration.y +
-//         acceleration.z * acceleration.z
-//     );
+      isAnimationPlaying.value = true;
+    };
 
-//     if (!judge && accelerationStrength > THRESHOLD) {
-//       webar.startAnimationOnClick();
-//       judge = true;
-//     }
-//   }
+    // ARが起動されたら状態を更新
+    webar.delegate = {
+      onARButton: () => {
+        setTimeout(() => {
+          messe.value = true;
+        }, 2500);
+      },
+      onPlaneFound: (pose: THREE.Matrix4) => {
+        // 平面が検知されたときの処理
+        isARStarted.value = false;
+        messe.value = false;
+      },
+    };
 
-// 次のフレームをリクエスト
-//   device.requestAnimationFrame(handleFrame);
-// }
-
-const scene_a = () => {
-  const testScene = new TestScene();
-  requestDeviceMotionPermission();
-  // const colorNum = webar.color_num;
-  // rocket = testScene.rocket;
-  // if (testScene && testScene.isObjectVisible) {
-  //   isObjectVisible = testScene.isObjectVisible;
-  // }
-  // if (!colorNum) return;
-  webar.placeScene(testScene);
-  Set_Object.value = false;
-};
-const playAnimation = () => {
-  // if (webar.arScene) {
-  //   if (!navigator.xr) return;
-  hassya.value = true;
-  window.addEventListener("devicemotion", (event) => {
-    // console.log(" event");
-    const accelerationStrength = handleMotion(event);
-    //console.log({ accelerationStrength });
-
-    // const displayDiv = document.getElementById("accelerationStrengthDisplay");
-    // if (displayDiv !== null) {
-    //   displayDiv.textContent = "Acceleration Strength: " + accelerationStrength;
-    // }
-    if (!judge && accelerationStrength > THRESHOLD) {
-      judge = true;
-      hassya.value = false;
-      webar.startAnimationOnClick();
-    }
-  });
-
-  isAnimationPlaying.value = true;
-
-  //   try {
-  //     const DV_motion = navigator.xr.requestSession("immersive-ar");
-  //     DV_motion.requestAnimationFrame((time: number) =>
-  //       handleFrame(time, DV_motion)
-  //     );
-  //     // xrDeviceを使用してXRセッションを開始するなどの処理を行う
-  //   } catch (error) {
-  //     console.error("Failed to request XR device:", error);
-  //   }
-  // webar.arScene.addEventListener("update", (event: any) => {
-  //   const deviceMotion = event.frame.getDeviceMotion();
-  //   const accelerationStrength = handleMotion(deviceMotion);
-  // }
-};
-
-// ARが起動されたら状態を更新
-webar.delegate = {
-  onARButton: () => {
-    setTimeout(() => {
-      messe.value = true;
-    }, 2500);
+    return {
+      scene_a,
+      playAnimation,
+      isARStarted,
+      isAnimationPlaying,
+      Set_Object,
+      messe,
+      hassya,
+    };
   },
-  onPlaneFound: (pose: THREE.Matrix4) => {
-    // 平面が検知されたときの処理
-    isARStarted.value = false;
-    messe.value = false;
-  },
-};
-// const again_play = () => {
-//   isAnimationPlaying.value = false;
-//   webar.startAnimationOnClick();
-// };
-
-// const scene_b = () => {
-//   webar.changeScene(new TestScene2());
-// };
+});
 </script>
 <template>
-  <!-- <button @click="scene_b">Change Scene</button> -->
-
   <button
     @click="scene_a"
     class="place-scene-button"
@@ -140,12 +100,6 @@ webar.delegate = {
     ロケット設置完了
   </button>
 
-  <!-- <button
-    @click="again_play"
-    :style="{ display: isAnimationPlaying ? 'block' : 'none' }"
-  >
-    Again
-  </button> -->
   <!-- 平面検知をユーザーに促すテキスト表示 -->
   <div
     v-if="messe"
