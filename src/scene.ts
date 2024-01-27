@@ -105,29 +105,26 @@ export class TestScene implements ARScene {
     this.scene.add(this.rocket.mesh);
 
     // 概要html
-    if (this.descriptionHtml === undefined)
-      if (this.descriptionHtmlMap === undefined)
-        // alert("descriptionHtml is undefined");
-        if (this.glbpath === undefined)
-          // alert("descriptionHtmlMap is undefined");
-          // alert("glbpath is undefined");
-
-          alert(this.glbpath + "first!!");
-
     if (this.descriptionHtmlMap && this.glbpath) {
-      this.descriptionHtml = this.descriptionHtmlMap.get(this.glbpath);
+      const target = this.glbpath;
+      this.descriptionHtml = this.descriptionHtmlMap.get(target);
+      if (this.descriptionHtml) this.descriptionHtml.visible = false;
     } else {
       alert("cant add!!!");
     }
     if (this.descriptionHtml === undefined) {
       alert("descriptionHtml is undefined");
-      alert(this.glbpath + "second!!");
     }
+    const elem = document.getElementById("html2canvas");
+    const children = elem?.children;
+    if (children)
+      for (let child of children) {
+        if (child.id !== glbpath) {
+          elem?.removeChild(child);
+        }
+      }
+    else alert("child is undefined");
     this.scene.add(this.descriptionHtml);
-
-    // if (glbpath) this.scene.add(this.descriptionHtmlMap?.get(glbpath));
-    // else alert("glbpath is undefined" + " " + glbpath);
-    // this.descriptionHtml = this.addDescriptionHtml("てんぷ", "説明文");
 
     const grnd: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
     const grnd_seiza: THREE.Vector3 = new THREE.Vector3(0, Tenzyo, 0);
@@ -237,6 +234,7 @@ export class TestScene implements ARScene {
   descriptionHtmlAnimate(): void {
     if (!this.seiza) return;
     if (!this.descriptionHtml) return;
+    this.descriptionHtml.visible = true;
     // if (this.seiza?.position.y <= 0.2) {
     // this.descriptionHtml.visible = true;
     // }

@@ -7,16 +7,6 @@ import { requestDeviceMotionPermission, handleMotion } from "./Cencer";
 import "@fontsource/klee-one";
 import { DescriptionHtml } from "./descriptionHtml";
 
-// let html2canvasElement: THREE.Mesh;
-
-// onMounted(async () => {
-//   const descriptionHtml = new DescriptionHtml();
-//   html2canvasElement = await descriptionHtml.generateDescriptionHtml(
-//     "tmp",
-//     "desc"
-//   );
-// });
-
 export default defineComponent({
   setup() {
     const webar = useWebAR(); //シングルトンを取得
@@ -39,21 +29,10 @@ export default defineComponent({
 
     const scene_a = () => {
       const testScene = new TestScene();
-      // testScene.addDescriptionHtml(html2canvasElement);
-      // alert('1')
       testScene.addDescriptionHtmlMap(descriptionHtmlMap);
-      // alert('2')
-      // const seizadesu = descriptionHtmlMap.get("aRyuu-za.glb");
-      // if (seizadesu === undefined) {
-      //   throw new Error();
-      // }
-      // testScene.addDescriptionHtml(seizadesu);
       requestDeviceMotionPermission();
-      // alert('3')
       webar.placeScene(testScene);
-      // alert('4')
       Set_Object.value = false;
-      // alert('5')
     };
     const playAnimation = () => {
       hassya.value = true;
