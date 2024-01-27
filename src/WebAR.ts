@@ -407,6 +407,7 @@ export class WebAR {
       }
       if (this.seizanimationStarted) {
         this.arScene?.seizanimate();
+        this.arScene?.descriptionHtmlAnimate();
       }
       this.delegate?.onRender?.(renderer);
       renderer.render(scene, camera);

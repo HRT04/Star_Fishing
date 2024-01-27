@@ -55,6 +55,7 @@ export interface ARScene {
 
   animate(): void;
   seizanimate(): void;
+  descriptionHtmlAnimate(): void;
 
   name(): string;
   addEventListener(
@@ -70,6 +71,7 @@ export class TestScene implements ARScene {
   scene?: any;
   descriptionHtml?: THREE.Mesh;
   descriptionHtmlMap?: Map<string, THREE.Mesh>;
+  glbpath?: string;
 
   addDescriptionHtml(mesh: THREE.Mesh): void {
     this.descriptionHtml = mesh;
@@ -88,6 +90,8 @@ export class TestScene implements ARScene {
     const webARInstance = useWebAR();
     const color_string = webARInstance.get_color_num.cn;
     const glbpath = webARInstance.get_color_num.pth;
+    if (glbpath) this.glbpath = glbpath.replace("./glb/", "");
+    else alert("glbpath is undefined");
 
     // scene作成
     const scene: THREE.Scene = new THREE.Scene();
@@ -101,9 +105,26 @@ export class TestScene implements ARScene {
     this.scene.add(this.rocket.mesh);
 
     // 概要html
-    alert("add descriptionHtml");
+    if (this.descriptionHtml === undefined)
+      if (this.descriptionHtmlMap === undefined)
+        // alert("descriptionHtml is undefined");
+        if (this.glbpath === undefined)
+          // alert("descriptionHtmlMap is undefined");
+          // alert("glbpath is undefined");
 
+          alert(this.glbpath + "first!!");
+
+    if (this.descriptionHtmlMap && this.glbpath) {
+      this.descriptionHtml = this.descriptionHtmlMap.get(this.glbpath);
+    } else {
+      alert("cant add!!!");
+    }
+    if (this.descriptionHtml === undefined) {
+      alert("descriptionHtml is undefined");
+      alert(this.glbpath + "second!!");
+    }
     this.scene.add(this.descriptionHtml);
+
     // if (glbpath) this.scene.add(this.descriptionHtmlMap?.get(glbpath));
     // else alert("glbpath is undefined" + " " + glbpath);
     // this.descriptionHtml = this.addDescriptionHtml("てんぷ", "説明文");
@@ -121,7 +142,7 @@ export class TestScene implements ARScene {
 
     // seiza読み込み
     if (glbpath) {
-      alert(glbpath);
+      // alert(glbpath);
       loadModel_seiza(new GLTFLoader(), grnd_seiza, glbpath, 0.005).then(
         (loadedModel) => {
           this.seiza = loadedModel;
@@ -214,7 +235,14 @@ export class TestScene implements ARScene {
     }
   }
   descriptionHtmlAnimate(): void {
-    //
+    if (!this.seiza) return;
+    if (!this.descriptionHtml) return;
+    // if (this.seiza?.position.y <= 0.2) {
+    // this.descriptionHtml.visible = true;
+    // }
+
+    this.descriptionHtml.position.y = this.seiza.position.y;
+    this.descriptionHtml.position.x = this.seiza.position.x + 0.2;
   }
 }
 

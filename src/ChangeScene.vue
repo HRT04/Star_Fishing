@@ -40,15 +40,20 @@ export default defineComponent({
     const scene_a = () => {
       const testScene = new TestScene();
       // testScene.addDescriptionHtml(html2canvasElement);
-      // testScene.addDescriptionHtmlMap(descriptionHtmlMap);
-      const seizadesu = descriptionHtmlMap.get("aRyuu-za.glb");
-      if (seizadesu === undefined) {
-        throw new Error();
-      }
-      testScene.addDescriptionHtml(seizadesu);
+      // alert('1')
+      testScene.addDescriptionHtmlMap(descriptionHtmlMap);
+      // alert('2')
+      // const seizadesu = descriptionHtmlMap.get("aRyuu-za.glb");
+      // if (seizadesu === undefined) {
+      //   throw new Error();
+      // }
+      // testScene.addDescriptionHtml(seizadesu);
       requestDeviceMotionPermission();
+      // alert('3')
       webar.placeScene(testScene);
+      // alert('4')
       Set_Object.value = false;
+      // alert('5')
     };
     const playAnimation = () => {
       hassya.value = true;
